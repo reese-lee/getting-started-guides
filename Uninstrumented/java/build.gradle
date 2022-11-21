@@ -1,0 +1,24 @@
+plugins {
+    id 'org.springframework.boot' version '2.5.8'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+bootRun {
+    mainClass.set 'com.example.demo.Application'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
