@@ -86,7 +86,7 @@ public class Application {
         OtlpGrpcSpanExporter.builder()
             .setEndpoint("https://otlp.nr-data.net:4317")
             .setCompression("gzip")
-            .addHeader("api-key", "747d4704ef1bf95b94ff8f4e349f09583b3dNRAL");
+            .addHeader("api-key", newrelicLicenseKey);
     sdkTracerProviderBuilder.addSpanProcessor(
         BatchSpanProcessor.builder(spanExporterBuilder.build()).build());
 
@@ -99,7 +99,7 @@ public class Application {
         OtlpGrpcMetricExporter.builder()
             .setEndpoint("https://otlp.nr-data.net:4317")
             .setCompression("gzip")
-            .addHeader("api-key", "747d4704ef1bf95b94ff8f4e349f09583b3dNRAL")
+            .addHeader("api-key", newrelicLicenseKey)
             // IMPORTANT: New Relic requires metrics to be delta temporality
             .setAggregationTemporalitySelector(AggregationTemporalitySelector.deltaPreferred())
             // Use exponential histogram aggregation for histogram instruments to produce better
@@ -123,7 +123,7 @@ public class Application {
         OtlpGrpcLogExporter.builder()
             .setEndpoint("https://otlp.nr-data.net:4317")
             .setCompression("gzip")
-            .addHeader("api-key", "747d4704ef1bf95b94ff8f4e349f09583b3dNRAL");
+            .addHeader("api-key", newrelicLicenseKey);
     sdkLogEmitterProvider.addLogProcessor(
               BatchLogProcessor.builder(logExporterBuilder.build()).build());
     
