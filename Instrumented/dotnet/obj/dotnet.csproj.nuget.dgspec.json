@@ -1,0 +1,97 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/reeselee/Documents/opentelemetry/q3-mcv3/test/dotnet/dotnet.csproj": {}
+  },
+  "projects": {
+    "/Users/reeselee/Documents/opentelemetry/q3-mcv3/test/dotnet/dotnet.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/reeselee/Documents/opentelemetry/q3-mcv3/test/dotnet/dotnet.csproj",
+        "projectName": "dotnet",
+        "projectPath": "/Users/reeselee/Documents/opentelemetry/q3-mcv3/test/dotnet/dotnet.csproj",
+        "packagesPath": "/Users/reeselee/.nuget/packages/",
+        "outputPath": "/Users/reeselee/Documents/opentelemetry/q3-mcv3/test/dotnet/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/reeselee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "OpenTelemetry": {
+              "target": "Package",
+              "version": "[1.4.0-beta.3, )"
+            },
+            "OpenTelemetry.Api": {
+              "target": "Package",
+              "version": "[1.4.0-beta.3, )"
+            },
+            "OpenTelemetry.Exporter.OpenTelemetryProtocol": {
+              "target": "Package",
+              "version": "[1.4.0-beta.3, )"
+            },
+            "OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs": {
+              "target": "Package",
+              "version": "[1.4.0-beta.3, )"
+            },
+            "OpenTelemetry.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[1.0.0-rc9.9, )"
+            },
+            "OpenTelemetry.Instrumentation.AspNetCore": {
+              "target": "Package",
+              "version": "[1.0.0-rc9.9, )"
+            },
+            "OpenTelemetry.Instrumentation.Http": {
+              "target": "Package",
+              "version": "[1.0.0-rc9.9, )"
+            },
+            "OpenTelemetry.Instrumentation.Runtime": {
+              "target": "Package",
+              "version": "[1.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/6.0.100/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

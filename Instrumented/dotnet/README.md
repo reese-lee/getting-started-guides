@@ -1,9 +1,14 @@
-To run all the dotnet app via docker-compose:
+# Instrumented .NET demo app
+
+Requires:
+
+* .NET 6
+* A New Relic account
+
+To run the uninstrumented dotnet app via the CLI, switch to the `dotnet` directory and run:
 
 ```shell
-export NEW_RELIC_API_KEY=<your_license_key>
-
-docker-compose up
+dotnet run
 ```
 
 To exercise, in a new shell:

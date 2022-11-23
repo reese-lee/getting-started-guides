@@ -4,6 +4,10 @@ echo "GET ${1}/fibonacci?n=5"
 curl "${1}/fibonacci?n=5" || true
 echo
 
+echo "GET ${1}/fibonacci?n=283"
+curl "${1}/fibonacci?n=283" || true
+echo
+
 echo "GET ${1}/fibonacci?n=10"
 curl "${1}/fibonacci?n=10" || true
 echo
