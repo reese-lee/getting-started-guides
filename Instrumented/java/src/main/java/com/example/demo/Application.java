@@ -8,6 +8,8 @@ import io.opentelemetry.sdk.resources.Resource;
 import java.util.UUID;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import java.util.Optional;
+import java.util.function.Function;
 
 // Dependencies for tracing 
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
@@ -63,6 +65,13 @@ public class Application {
   }
 
   private static OpenTelemetrySdk openTelemetrySdk() {
+    
+    var newrelicLicenseKey =
+        getEnvOrDefault(
+            "NEW_RELIC_API_KEY",
+            Function.identity(),
+            getEnvOrDefault("NEW_RELIC_LICENSE_KEY", Function.identity(), ""));
+    
     // Configure resource
     var resource =
         Resource.getDefault().toBuilder()
@@ -137,6 +146,15 @@ public class Application {
         .buildAndRegisterGlobal();
   }
 
+  private static <T> T getEnvOrDefault(String key, Function<String, T> transformer, T defaultValue) {
+    return Optional.ofNullable(System.getenv(key))
+      .filter(s -> !s.isBlank())
+      .or(() -> Optional.ofNullable(System.getProperty(key)))
+      .filter(s -> !s.isBlank())
+      .map(transformer)
+      .orElse(defaultValue);
+  }
+  
   @Bean
   public Filter webMvcTracingFilter() {
     return SpringWebMvcTelemetry.create(GlobalOpenTelemetry.get()).createServletFilter();
