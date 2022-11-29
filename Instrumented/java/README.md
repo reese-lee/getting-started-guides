@@ -1,38 +1,25 @@
-# Summary
+# Getting Started Guide - Java
 
-Java implementation of appathon app.
+This is the solution (completely instrumented with OpenTelemetry) for the Java demo application used in the Getting Started Guide - Java doc. 
 
-## Run via docker
+Requires:
 
-No dependencies needed besides docker.
+* Java 8+
+* [A New Relic account](https://one.newrelic.com/)
 
-Replace `<your_license_key>` with your New Relic license key.
+To run this demo app via the CLI:
+
+1. Switch to the `java` directory
+2. Export the following environment variables (replace `<your_license_key>` with your [New Relic ingest license key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/#license-key)):
+* export OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.nr-data.net:4317
+* export OTEL_EXPORTER_OTLP_HEADERS=api-key=<your_license_key>
+3. Run the following command
 
 ```shell
-docker build -t appathon-java . \
-  && docker run -p 8080:8080 \
-    --env OTEL_SERVICE_NAME=appathon-java \
-    --env OTEL_RESOURCE_ATTRIBUTES=service.instance.id=6d1331ab-cfd3-4fff-9dfe-21e5cbfab49a \
-    --env OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.nr-data.net:4317 \
-    --env OTEL_EXPORTER_OTLP_HEADERS=api-key=<your_license_key> \
-    --env OTEL_EXPORTER_OTLP_COMPRESSION=gzip \
-    --env OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT=1000 \
-    appathon-java
+./gradlew bootRun
 ```
 
-## Run via JDK
-
-Requires java 11 to be installed. 
-
-Replace `<your_license_key>` with your New Relic license key.
-
+4. To generate traffic, in a new terminal tab run the following command
 ```shell
-export OTEL_SERVICE_NAME=appathon-java
-export OTEL_RESOURCE_ATTRIBUTES=service.instance.id=6d1331ab-cfd3-4fff-9dfe-21e5cbfab49a
-export OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.nr-data.net:4317
-export OTEL_EXPORTER_OTLP_HEADERS=api-key=<your_license_key>
-export OTEL_EXPORTER_OTLP_COMPRESSION=gzip
-export OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT=1000
-
-./gradlew bootRun
+./load-generator.sh
 ```
