@@ -37,111 +37,109 @@ import java.util.function.Function;
 @SpringBootApplication
 public class Application {
 
-    public static void main(String[] args) {
-        // Configure OpenTelemetry as early as possible
-        var openTelemetrySdk = openTelemetrySdk();
+  public static void main(String[] args) {
+    // Configure OpenTelemetry as early as possible
+    var openTelemetrySdk = openTelemetrySdk();
 
-        // Initialize Log4j2 appender
-        OpenTelemetryAppender.setSdkLogEmitterProvider(openTelemetrySdk.getSdkLogEmitterProvider());
+    // Initialize Log4j2 appender
+    OpenTelemetryAppender.setSdkLogEmitterProvider(openTelemetrySdk.getSdkLogEmitterProvider());
 
-        // Register runtime metrics instrumentation
-        MemoryPools.registerObservers(openTelemetrySdk);
-        GarbageCollector.registerObservers(openTelemetrySdk);
+    // Register runtime metrics instrumentation
+    MemoryPools.registerObservers(openTelemetrySdk);
+    GarbageCollector.registerObservers(openTelemetrySdk);
 
-        SpringApplication.run(Application.class, args);
+    SpringApplication.run(Application.class, args);
 
-    }
+  }
+  private static OpenTelemetrySdk openTelemetrySdk() {
+    // Environment variables for your OTLP exporters
+    var newrelicLicenseKey = getEnvOrDefault("NEW_RELIC_LICENSE_KEY", Function.identity(), "");
+    var newrelicOtlpEndpoint = getEnvOrDefault("OTLP_HOST", Function.identity(), "https://otlp.nr-data.net:4317");
 
-    private static OpenTelemetrySdk openTelemetrySdk() {
-        // Environment variables for your OTLP exporters
-        var newrelicLicenseKey = getEnvOrDefault("NEW_RELIC_LICENSE_KEY", Function.identity(), "");
-        var newrelicOtlpEndpoint = getEnvOrDefault("OTLP_HOST", Function.identity(), "https://otlp.nr-data.net:4317");
+    // Configure resource
+    var resource =
+            Resource.getDefault().toBuilder()
+                    .put(ResourceAttributes.SERVICE_NAME, "getting-started-java")
+                    .put(ResourceAttributes.SERVICE_INSTANCE_ID, UUID.randomUUID().toString())
+                    .build();
+    // Configure tracer provider
+    var sdkTracerProviderBuilder =
+            SdkTracerProvider.builder()
+                    .setResource(resource)
+                    // New Relic's max attribute length is 4095 characters
+                    .setSpanLimits(
+                            SpanLimits.getDefault().toBuilder().setMaxAttributeValueLength(4095).build());
 
-        // Configure resource
-        var resource =
-                Resource.getDefault().toBuilder()
-                        .put(ResourceAttributes.SERVICE_NAME, "getting-started-java")
-                        .put(ResourceAttributes.SERVICE_INSTANCE_ID, UUID.randomUUID().toString())
-                        .build();
-        // Configure tracer provider
-        var sdkTracerProviderBuilder =
-                SdkTracerProvider.builder()
-                        .setResource(resource)
-                        // New Relic's max attribute length is 4095 characters
-                        .setSpanLimits(
-                                SpanLimits.getDefault().toBuilder().setMaxAttributeValueLength(4095).build());
+    // Add otlp span exporter
+    var spanExporterBuilder =
+            OtlpGrpcSpanExporter.builder()
+                    .setEndpoint(newrelicOtlpEndpoint)
+                    .setCompression("gzip")
+                    .addHeader("api-key", newrelicLicenseKey);
+    sdkTracerProviderBuilder.addSpanProcessor(
+            BatchSpanProcessor.builder(spanExporterBuilder.build()).build());
 
-        // Add otlp span exporter
-        var spanExporterBuilder =
-                OtlpGrpcSpanExporter.builder()
-                        .setEndpoint(newrelicOtlpEndpoint)
-                        .setCompression("gzip")
-                        .addHeader("api-key", newrelicLicenseKey);
-        sdkTracerProviderBuilder.addSpanProcessor(
-                BatchSpanProcessor.builder(spanExporterBuilder.build()).build());
+    // Configure meter provider
+    var sdkMeterProviderBuilder = SdkMeterProvider.builder().setResource(resource);
 
-        // Configure meter provider
-        var sdkMeterProviderBuilder = SdkMeterProvider.builder().setResource(resource);
+    // Add otlp metric exporter
+    var metricExporterBuilder =
+            OtlpGrpcMetricExporter.builder()
+                    .setEndpoint(newrelicOtlpEndpoint)
+                    .setCompression("gzip")
+                    .addHeader("api-key", newrelicLicenseKey)
+                    // IMPORTANT: New Relic requires metrics to be delta temporality
+                    .setAggregationTemporalitySelector(AggregationTemporalitySelector.deltaPreferred())
+                    // Use exponential histogram aggregation for histogram instruments to produce better
+                    // data and compression
+                    .setDefaultAggregationSelector(
+                            DefaultAggregationSelector.getDefault()
+                                    .with(InstrumentType.HISTOGRAM, ExponentialHistogramAggregation.getDefault()));
+    // Register and build a metric reader
+    sdkMeterProviderBuilder.registerMetricReader(
+            PeriodicMetricReader.builder(metricExporterBuilder.build()).build());
 
-        // Add otlp metric exporter
-        var metricExporterBuilder =
-                OtlpGrpcMetricExporter.builder()
-                        .setEndpoint(newrelicOtlpEndpoint)
-                        .setCompression("gzip")
-                        .addHeader("api-key", newrelicLicenseKey)
-                        // IMPORTANT: New Relic requires metrics to be delta temporality
-                        .setAggregationTemporalitySelector(AggregationTemporalitySelector.deltaPreferred())
-                        // Use exponential histogram aggregation for histogram instruments to produce better
-                        // data and compression
-                        .setDefaultAggregationSelector(
-                                DefaultAggregationSelector.getDefault()
-                                        .with(InstrumentType.HISTOGRAM, ExponentialHistogramAggregation.getDefault()));
-        // Register and build a metric reader
-        sdkMeterProviderBuilder.registerMetricReader(
-                PeriodicMetricReader.builder(metricExporterBuilder.build()).build());
+    // Configure log emitter provider
+    var sdkLogEmitterProvider =
+            SdkLogEmitterProvider.builder()
+                    // New Relic's max attribute length is 4095 characters
+                    .setLogLimits(
+                            () -> LogLimits.getDefault().toBuilder().setMaxAttributeValueLength(4095).build())
+                    .setResource(resource);
 
-        // Configure log emitter provider
-        var sdkLogEmitterProvider =
-                SdkLogEmitterProvider.builder()
-                        // New Relic's max attribute length is 4095 characters
-                        .setLogLimits(
-                                () -> LogLimits.getDefault().toBuilder().setMaxAttributeValueLength(4095).build())
-                        .setResource(resource);
-
-        // Add otlp log exporter
-        var logExporterBuilder =
-                OtlpGrpcLogExporter.builder()
-                        .setEndpoint(newrelicOtlpEndpoint)
-                        .setCompression("gzip")
-                        .addHeader("api-key", newrelicLicenseKey);
-        sdkLogEmitterProvider.addLogProcessor(
-                BatchLogProcessor.builder(logExporterBuilder.build()).build());
+    // Add otlp log exporter
+    var logExporterBuilder =
+            OtlpGrpcLogExporter.builder()
+                    .setEndpoint(newrelicOtlpEndpoint)
+                    .setCompression("gzip")
+                    .addHeader("api-key", newrelicLicenseKey);
+    sdkLogEmitterProvider.addLogProcessor(
+            BatchLogProcessor.builder(logExporterBuilder.build()).build());
 
 
-        // Bring it all together
-        return OpenTelemetrySdk.builder()
-                .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-                .setTracerProvider(sdkTracerProviderBuilder.build())
-                .setMeterProvider(sdkMeterProviderBuilder.build())
-                .setLogEmitterProvider(sdkLogEmitterProvider.build())
-                .buildAndRegisterGlobal();
+    // Bring it all together
+    return OpenTelemetrySdk.builder()
+            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+            .setTracerProvider(sdkTracerProviderBuilder.build())
+            .setMeterProvider(sdkMeterProviderBuilder.build())
+            .setLogEmitterProvider(sdkLogEmitterProvider.build())
+            .buildAndRegisterGlobal();
 
-    }
+  }
+  private static <T> T getEnvOrDefault(
+          String key, Function<String, T> transformer, T defaultValue) {
+    return Optional.ofNullable(System.getenv(key))
+            .filter(s -> !s.isBlank())
+            .or(() -> Optional.ofNullable(System.getProperty(key)))
+            .filter(s -> !s.isBlank())
+            .map(transformer)
+            .orElse(defaultValue);
+  }
 
-    private static <T> T getEnvOrDefault(
-            String key, Function<String, T> transformer, T defaultValue) {
-        return Optional.ofNullable(System.getenv(key))
-                .filter(s -> !s.isBlank())
-                .or(() -> Optional.ofNullable(System.getProperty(key)))
-                .filter(s -> !s.isBlank())
-                .map(transformer)
-                .orElse(defaultValue);
-    }
-
-    // Add Spring WebMVC instrumentation by registering a tracing filter
-    @Bean
-    public Filter webMvcTracingFilter() {
-        return SpringWebMvcTelemetry.create(GlobalOpenTelemetry.get()).createServletFilter();
-    }
+  // Add Spring WebMVC instrumentation by registering a tracing filter
+  @Bean
+  public Filter webMvcTracingFilter() {
+    return SpringWebMvcTelemetry.create(GlobalOpenTelemetry.get()).createServletFilter();
+  }
 
 }
