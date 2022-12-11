@@ -6,7 +6,7 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -19,7 +19,7 @@ bootRun {
 }
 
 configurations.all {
-  exclude module: 'spring-boot-starter-logging'
+    exclude module: 'spring-boot-starter-logging'
 }
 
 dependencies {
