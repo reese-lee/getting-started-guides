@@ -49,8 +49,8 @@ public class FibonacciController : ControllerBase
         // Add a span attribute to capture user input
         activity?.SetTag("fibonacci.n", n);
 
-        // Create a custom counter to measure the number of successful computations
-        Counter<long> counter = meter.CreateCounter<long>("FibonacciMeter.SuccessCounter");
+        // Create a custom counter
+        Counter<long> counter = meter.CreateCounter<long>("FibonacciMeter.MyCounter");
 
         // If user input ('n') is invalid, throw an `ArgumentOutofRangeException, 
         // record an exception as an event on the span, 
@@ -86,21 +86,16 @@ public class FibonacciController : ControllerBase
         // Add a span attribute to capture the result
         // if the computation was successful
         activity?.SetTag("fibonacci.result", result);
-        // Increment the counter for every successful 
-        // computation, and capture the result and user input
-        counter.Add(1, new("user-input", "user input was " + n), new("successful-result", "result was " + result));
+        // Increment the counter for every successful computation
+        counter.Add(1);
         return result;
     }
 
     private void ThrowIfOutOfRange(long n)
     {
-        // Create another counter
-        Counter<long> counter = meter.CreateCounter<long>("FibonacciMeter.ExceptionCounter");
 
         if (n < 1 || n > 90)
         {
-            // Counter to count number of exceptions
-            counter.Add(1, new("Hey, this exception occurred", "this many times"), new("input", "invalid input was " + n));
             _logger.LogInformation("The invalid input was {count}", n);
             throw new ArgumentOutOfRangeException(nameof(n), n, "n must be between 1 and 90");
         }
