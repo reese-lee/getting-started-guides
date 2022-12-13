@@ -1,4 +1,4 @@
-﻿using dotnet.Controllers;
+using dotnet.Controllers;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
