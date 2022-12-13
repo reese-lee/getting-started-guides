@@ -2,10 +2,10 @@
 
 Requires:
 
-* Java 8+
+* Java 17+
 * A New Relic account
 
-To run the uninstrumented dotnet app via the CLI, switch to the `java` directory and run:
+To run the uninstrumented java app via the CLI, switch to the `java` directory and run:
 
 ```shell
 ./gradlew bootRun

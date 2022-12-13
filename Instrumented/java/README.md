@@ -4,7 +4,7 @@ This is the solution (completely instrumented with OpenTelemetry) for the Java d
 
 Requires:
 
-* Java 8+
+* Java 17+
 * [A New Relic account](https://one.newrelic.com/)
 
 To run this demo app via the CLI:
