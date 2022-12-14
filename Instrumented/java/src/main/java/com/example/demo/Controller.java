@@ -35,8 +35,9 @@ public class Controller {
 
     @Autowired
     Controller(OpenTelemetry openTelemetry) {
-        // Initialize tracer and instrument
+        // Initialize tracer 
         tracer = openTelemetry.getTracer(Controller.class.getName());
+        // Initialize instrument
         Meter meter = openTelemetry.getMeter(Controller.class.getName());
         myCounter = meter.counterBuilder("my-custom-counter").setDescription("A counter that counts things").build();
     }
