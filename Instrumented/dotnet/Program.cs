@@ -38,7 +38,6 @@ builder.Services.AddOpenTelemetry()
             .SetResourceBuilder(resourceBuilder)
             .AddRuntimeInstrumentation()
             .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
             .AddMeter(FibonacciController.MeterName)
             .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
             {
