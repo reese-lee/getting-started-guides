@@ -53,19 +53,15 @@ public class FibonacciController : ControllerBase
                 throw new ArgumentOutOfRangeException(nameof(n), n, "n must be between 1 and 90");
             }
 
-            var result = 0L;
-            if (n <= 2)
-            {
-                result = 1;
-            }
-            else
+            var result = 1L;
+            if (n > 2)
             {
                 var a = 0L;
                 var b = 1L;
 
                 for (var i = 1; i < n; i++)
                 {
-                    result = checked(a + b);
+                    result = a + b;
                     a = b;
                     b = result;
                 }
