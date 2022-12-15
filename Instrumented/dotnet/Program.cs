@@ -1,4 +1,3 @@
-using dotnet.Controllers;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -25,24 +24,18 @@ builder.Services.AddOpenTelemetry()
         tracerProviderBuilder
             .SetResourceBuilder(resourceBuilder)
             .AddAspNetCoreInstrumentation()
-            .AddSource(FibonacciController.ActivitySourceName)
-            .AddOtlpExporter((options =>
-            {
-                options.Endpoint = new Uri($"{Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")}");
-                options.Headers = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_HEADERS");
-            }));
+            .AddSource(nameof(dotnet))
+            .AddOtlpExporter();
     })
     .WithMetrics(meterProviderBuilder =>
     {
         meterProviderBuilder
             .SetResourceBuilder(resourceBuilder)
-            .AddRuntimeInstrumentation()
             .AddAspNetCoreInstrumentation()
-            .AddMeter(FibonacciController.MeterName)
+            .AddRuntimeInstrumentation()
+            .AddMeter(nameof(dotnet))
             .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
             {
-                exporterOptions.Endpoint = new Uri($"{Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")}");
-                exporterOptions.Headers = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_HEADERS");
                 metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
             });
 
@@ -50,20 +43,14 @@ builder.Services.AddOpenTelemetry()
     .StartWithHost();
 
 // Configure the OpenTelemetry SDK for logs
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-
 builder.Logging.AddOpenTelemetry(options =>
 {
     options.IncludeFormattedMessage = true;
     options.ParseStateValues = true;
     options.IncludeScopes = true;
-    options.SetResourceBuilder(resourceBuilder)
-        .AddOtlpExporter(options =>
-        {
-            options.Endpoint = new Uri($"{Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")}");
-            options.Headers = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_HEADERS");
-        });
+    options
+        .SetResourceBuilder(resourceBuilder)
+        .AddOtlpExporter();
 });
 
 var app = builder.Build();

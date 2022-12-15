@@ -9,20 +9,22 @@ namespace dotnet.Controllers;
 [Route("[controller]")]
 public class FibonacciController : ControllerBase
 {
-    // Create a Tracer
-    public const string ActivitySourceName = "FibonacciService";
-    private ActivitySource activitySource = new ActivitySource(ActivitySourceName);
+    private const string AttributeNameN = "fibonacci.n";
+    private const string AttributeNameResult = "fibonacci.result";
+    private const string AttributeNameValid = "fibonacci.valid.n";
 
-    // Create a Meter
-    public const string MeterName = "FibonacciMeter";
-    private Meter meter = new Meter(MeterName);
+    private static ActivitySource activitySource = new ActivitySource(nameof(dotnet));
+    private static Meter meter = new Meter(nameof(dotnet));
+    private static Counter<long> fibonacciInvocations = meter.CreateCounter<long>(
+        name: "fibonacci.invocations",
+        unit: null,
+        description: "Measures the number of times the fibonacci method is invoked.");
 
-    // Create a Logger
-    private readonly ILogger<FibonacciController> _logger;
+    private readonly ILogger<FibonacciController> logger;
 
     public FibonacciController(ILogger<FibonacciController> logger)
     {
-        _logger = logger;
+        this.logger = logger;
     }
 
     [HttpGet]
@@ -30,74 +32,57 @@ public class FibonacciController : ControllerBase
     {
         try
         {
-            return Ok(new {
-                n = n,
-                result = Fibonacci(n)
-            });
+            return Ok(new { n = n, result = Fibonacci(n) });
         }
         catch (ArgumentOutOfRangeException ex)
         {
+            Activity.Current.SetStatus(Status.Error.WithDescription(ex.Message));
             return BadRequest(new { message = ex.Message });
         }
     }
 
     private long Fibonacci(long n)
     {
-        // Start a new span using your tracer
         using var activity = activitySource.StartActivity(nameof(Fibonacci));
+        activity?.SetTag(AttributeNameN, n);
 
-        // Add a span attribute to capture user input
-        activity?.SetTag("fibonacci.n", n);
-
-        // Create a custom counter
-        Counter<long> counter = meter.CreateCounter<long>("FibonacciMeter.MyCounter");
-
-        // If user input ('n') is invalid, throw an `ArgumentOutofRangeException, 
-        // record an exception as an event on the span, 
-        // and set the span’s status to `Error`
         try
         {
-            ThrowIfOutOfRange(n);
+            if (n < 1 || n > 90)
+            {
+                throw new ArgumentOutOfRangeException(nameof(n), n, "n must be between 1 and 90");
+            }
+
+            var result = 0L;
+            if (n <= 2)
+            {
+                result = 1;
+            }
+            else
+            {
+                var a = 0L;
+                var b = 1L;
+
+                for (var i = 1; i < n; i++)
+                {
+                    result = checked(a + b);
+                    a = b;
+                    b = result;
+                }
+            }
+
+            activity?.SetTag(AttributeNameResult, result);
+            fibonacciInvocations.Add(1, new KeyValuePair<string, object?>(AttributeNameValid, true));
+            logger.LogInformation("Computed fib({n}) = {result}.", n, result);
+            return result;
         }
         catch (ArgumentOutOfRangeException ex)
         {
             activity?.SetStatus(Status.Error.WithDescription(ex.Message));
             activity?.RecordException(ex);
+            fibonacciInvocations.Add(1, new KeyValuePair<string, object?>(AttributeNameValid, false));
+            logger.LogInformation("Failed to compute fib({n}).", n);
             throw;
-        }
-
-        var result = 0L;
-        if (n <= 2)
-        {
-            result = 1;
-        }
-        else
-        {
-            var a = 0L;
-            var b = 1L;
-
-            for (var i = 1; i < n; i++)
-            {
-                result = checked(a + b);
-                a = b;
-                b = result;
-            }
-        }
-        // Add a span attribute to capture the result
-        // if the computation was successful
-        activity?.SetTag("fibonacci.result", result);
-        // Increment the counter for every successful computation
-        counter.Add(1);
-        return result;
-    }
-
-    private void ThrowIfOutOfRange(long n)
-    {
-
-        if (n < 1 || n > 90)
-        {
-            _logger.LogInformation("The invalid input was {count}", n);
-            throw new ArgumentOutOfRangeException(nameof(n), n, "n must be between 1 and 90");
         }
     }
 }
