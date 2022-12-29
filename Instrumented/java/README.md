@@ -30,3 +30,5 @@ export newrelicOtlpEndpoint=https://otlp.nr-data.net:4317
 ```shell
 ./load-generator.sh
 ```
+
+5. To shut down the program, run the following in both shells or terminal tabs: `ctrl + c`. 

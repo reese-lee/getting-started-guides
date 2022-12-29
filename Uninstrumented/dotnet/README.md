@@ -15,3 +15,5 @@ To exercise, in a new shell:
 ```shell
 ./load-generator.sh
 ```
+
+To shut down the program, run the following in both shells or terminal tabs: `ctrl + c`. 
